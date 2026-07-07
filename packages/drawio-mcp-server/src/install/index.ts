@@ -1,4 +1,8 @@
-import { InstallOptions } from "./types.js";
+import { promises as fs } from "node:fs";
+import { existsSync } from "node:fs";
+import type { HostAdapter, InstallOptions, McpEntry } from "./types.js";
+import { HOST_ADAPTERS } from "./hosts/index.js";
+import { atomicWrite, ensureBackup, unifiedDiff } from "./config-io.js";
 
 const SUPPORTED_HOSTS = new Set([
   "claude-code",
@@ -86,6 +90,67 @@ export function parseArgs(argv: string[]): InstallOptions {
   return opts;
 }
 
-export async function runInstall(_argv: string[]): Promise<number> {
+export function buildEntry(opts: InstallOptions): McpEntry {
+  const args = ["-y", "drawio-mcp-server"];
+  if (opts.editor) args.push("--editor");
+  if (opts.httpPort !== 3000) args.push("--http-port", String(opts.httpPort));
+  for (const a of opts.extraArgs) args.push(a);
+  return { command: "npx", args, env: opts.env, transport: "stdio" };
+}
+
+export async function runInstall(argv: string[]): Promise<number> {
+  let opts: InstallOptions;
+  try {
+    opts = parseArgs(argv);
+  } catch (err) {
+    process.stderr.write(
+      `${err instanceof Error ? err.message : String(err)}\n`,
+    );
+    return 1;
+  }
+  if (opts.host === "all") {
+    process.stderr.write("`install all` will be wired in a later task\n");
+    return 1;
+  }
+  const adapter = HOST_ADAPTERS[opts.host];
+  if (!adapter) {
+    process.stderr.write(`unsupported host: ${opts.host}\n`);
+    return 1;
+  }
+  return applySingle(adapter, opts);
+}
+
+async function applySingle(
+  adapter: HostAdapter,
+  opts: InstallOptions,
+): Promise<number> {
+  const target = opts.configPath ?? adapter.defaultPaths()[0];
+  const source = existsSync(target) ? await fs.readFile(target, "utf8") : "";
+  const entry = buildEntry(opts);
+  const next = adapter.merge(source, entry, opts.name, {
+    uninstall: opts.uninstall,
+  });
+
+  if (opts.print) {
+    process.stdout.write(next.endsWith("\n") ? next : `${next}\n`);
+    return 0;
+  }
+  if (source === next) {
+    process.stderr.write(`no change: ${target}\n`);
+    return 0;
+  }
+  const diff = unifiedDiff(source, next, target);
+  if (opts.dryRun) {
+    process.stderr.write(diff);
+    return 0;
+  }
+  if (existsSync(target) && !opts.yes) {
+    process.stderr.write(diff);
+    process.stderr.write(`\nRe-run with --yes to apply changes.\n`);
+    return 4;
+  }
+  await ensureBackup(target);
+  await atomicWrite(target, next);
+  process.stderr.write(`updated: ${target}\n`);
   return 0;
 }

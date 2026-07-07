@@ -1,6 +1,8 @@
-import { describe, it, expect } from "@jest/globals";
+import { describe, it, expect, beforeEach, afterEach } from "@jest/globals";
 import { parseArgs } from "./index.js";
 import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -91,5 +93,35 @@ describe("dispatch (smoke)", () => {
     );
     expect(result.stdout).toContain("[mcp_servers.drawio]");
     expect(result.status).toBe(0);
+  });
+});
+
+describe("runInstall (codex + --print)", () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "drawio-install-"));
+  });
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it("prints codex TOML to stdout without touching disk", async () => {
+    const target = join(dir, "config.toml");
+    const chunks: string[] = [];
+    const orig = process.stdout.write.bind(process.stdout);
+    (process.stdout.write as unknown as (s: string) => boolean) = (s) => {
+      chunks.push(String(s));
+      return true;
+    };
+    const { runInstall } = await import("./index.js");
+    const code = await runInstall([
+      "codex",
+      "--print",
+      "--config-path",
+      target,
+    ]);
+    process.stdout.write = orig;
+    expect(code).toBe(0);
+    expect(chunks.join("")).toContain("[mcp_servers.drawio]");
   });
 });
