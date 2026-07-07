@@ -3,9 +3,7 @@ description: Open a Draw.io file (path or URL) in the connected editor or extens
 allowed-tools:
   - Read
   - WebFetch
-  - Bash(xdg-open:*)
-  - Bash(open:*)
-  - Bash(cmd /c start:*)
+  - Bash(node:*)
   - mcp__drawio__list-documents
   - mcp__drawio__import-diagram
 argument-hint: <file-or-url>
@@ -28,7 +26,11 @@ Steps:
 5. Open the editor URL in the browser:
    - Read env vars: `DRAWIO_MCP_HOST` (default `localhost`), `DRAWIO_MCP_HTTP_PORT` (default `3000`), `DRAWIO_MCP_TLS` (`true` → `https`, else `http`).
    - Build `URL = <scheme>://<host>:<port>/`.
-   - Launch: `xdg-open "$URL"` on Linux, `open "$URL"` on macOS, `cmd /c start "" "$URL"` on Windows. Detect OS via `uname -s` or Node `process.platform` via Bash `node -e 'console.log(process.platform)'`.
+   - Launch via a Node spawn that argv-passes the URL (never shell-interpolate it into a command string, since `$URL` may contain characters from `$ARGUMENTS`):
+     ```
+     node -e 'const {spawn}=require("child_process"); const url=process.argv[1]; const cmd = process.platform==="darwin"?"open":process.platform==="win32"?"cmd":"xdg-open"; const args = process.platform==="win32"?["/c","start","",url]:[url]; spawn(cmd,args,{detached:true,stdio:"ignore"}).unref();' "$URL"
+     ```
+     `$URL` becomes `argv[1]` to `node`, not part of the shell command, so shell metacharacters in it are inert.
 6. Report to the user:
    - Mode used (extension-import vs editor-only).
    - Which document (if any) received the import.

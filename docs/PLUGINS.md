@@ -20,7 +20,7 @@ Marketplace ref: `lgazo/drawio-mcp-server` (this repo). Manifest at `.claude-plu
 
 ## `drawio-mcp-server install <host>`
 
-The install subcommand ships with the `drawio-mcp-server` npm package. It writes/updates/removes the MCP entry in each host's own config file, using format-preserving parsers (`jsonc-parser` for JSON, `smol-toml` for TOML).
+The install subcommand ships with the `drawio-mcp-server` npm package. It writes/updates/removes the MCP entry in each host's own config file, using format-preserving parsers (`jsonc-parser` for JSON, a block-splicing merger backed by `smol-toml` for TOML rendering).
 
 ### Common examples
 

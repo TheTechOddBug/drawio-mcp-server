@@ -88,6 +88,45 @@ describe("codexAdapter.merge", () => {
     expect(removed).not.toContain("[env]");
     expect(removed).not.toContain("bar");
   });
+
+  it("recognizes quoted-key header form", () => {
+    const src = '[mcp_servers."drawio"]\ncommand = "old"\n';
+    const out = codexAdapter.merge(src, ENTRY, "drawio", { uninstall: false });
+    // Should update in place, not append a duplicate block.
+    expect((out.match(/\[mcp_servers/g) ?? []).length).toBe(1);
+    expect(out).toContain('command = "npx"');
+  });
+
+  it("recognizes whitespace-around-dot header form", () => {
+    const src = '[mcp_servers . drawio]\ncommand = "old"\n';
+    const out = codexAdapter.merge(src, ENTRY, "drawio", { uninstall: false });
+    expect((out.match(/\[mcp_servers/g) ?? []).length).toBe(1);
+    expect(out).toContain('command = "npx"');
+  });
+
+  it("throws on unsupported inline-in-parent form", () => {
+    const src = '[mcp_servers]\ndrawio = { command = "old" }\n';
+    expect(() =>
+      codexAdapter.merge(src, ENTRY, "drawio", { uninstall: false }),
+    ).toThrow(/inline-in-parent|move.*mcp_servers\.drawio/i);
+  });
+
+  it("does not confuse an indented [ array element with a sibling table header", () => {
+    // Not real drawio schema, but proves robustness for future keys.
+    const src = [
+      "[mcp_servers.drawio]",
+      'command = "old"',
+      "args = [",
+      "  [1, 2, 3],",
+      "]",
+      "",
+      "[mcp_servers.other]",
+      'command = "x"',
+    ].join("\n");
+    const out = codexAdapter.merge(src, ENTRY, "drawio", { uninstall: false });
+    expect(out).toContain("[mcp_servers.other]");
+    expect(out).toContain('command = "x"');
+  });
 });
 
 describe("codexAdapter.defaultPaths", () => {

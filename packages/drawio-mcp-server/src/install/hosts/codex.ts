@@ -19,8 +19,7 @@ export const codexAdapter: HostAdapter = {
     return fs.readFile(path, "utf8");
   },
   merge(source, entry, name, { uninstall }) {
-    const key = `mcp_servers.${name}`;
-    return mergeTomlBlock(source, key, uninstall ? null : blockBody(entry));
+    return mergeTomlBlock(source, name, uninstall ? null : blockBody(entry));
   },
   diffLabel() {
     return codexAdapter.defaultPaths()[0];
@@ -76,25 +75,87 @@ function tomlString(value: string): string {
  */
 function mergeTomlBlock(
   source: string,
-  key: string,
+  name: string,
   body: string | null,
 ): string {
-  const header = `[${key}]`;
-  const lines = removeBlock(
-    source.length > 0 ? source.split("\n") : [],
-    header,
-  );
-  if (body === null) return lines.join("\n");
-  return appendBlock(lines, header, body).join("\n");
+  const header = `[mcp_servers.${name}]`;
+  const lines = source.length > 0 ? source.split("\n") : [];
+  assertNoInlineInParentForm(lines, name);
+  const spliced = removeBlock(lines, name);
+  if (body === null) return spliced.join("\n");
+  return appendBlock(spliced, header, body).join("\n");
 }
 
-function removeBlock(lines: string[], header: string): string[] {
-  const startIdx = lines.findIndex((line) => line.trim() === header);
+/**
+ * Does `line` open the `[mcp_servers.<name>]` table, tolerating TOML-legal
+ * variants a hand-authored config might use: a quoted key segment
+ * (`[mcp_servers."drawio"]`) and/or whitespace around the `.` separator
+ * (`[mcp_servers . drawio]`)?
+ */
+function isTargetHeader(line: string, name: string): boolean {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return false;
+  const inner = trimmed.slice(1, -1).trim();
+  const segments = inner.split(/\s*\.\s*/).map(unquoteTomlKey);
+  return (
+    segments.length === 2 &&
+    segments[0] === "mcp_servers" &&
+    segments[1] === name
+  );
+}
+
+function unquoteTomlKey(segment: string): string {
+  const s = segment.trim();
+  if (s.length >= 2) {
+    const first = s[0];
+    const last = s[s.length - 1];
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      return s.slice(1, -1);
+    }
+  }
+  return s;
+}
+
+/**
+ * The inline-in-parent form (`[mcp_servers]` header followed by a bare
+ * `<name> = { ... }` assignment) is a different TOML structure from a
+ * nested `[mcp_servers.<name>]` table, and this tool's block-splice merge
+ * doesn't understand it. Rather than silently corrupt a hand-authored
+ * config (e.g. by appending a second, conflicting `drawio` entry), fail
+ * loudly and tell the user how to fix it.
+ */
+function assertNoInlineInParentForm(lines: string[], name: string): void {
+  const startIdx = lines.findIndex((line) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith("[") || !trimmed.endsWith("]")) return false;
+    return trimmed.slice(1, -1).trim() === "mcp_servers";
+  });
+  if (startIdx === -1) return;
+
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const assignment = new RegExp(
+    `^\\s*(?:${escapedName}|"${escapedName}"|'${escapedName}')\\s*=`,
+  );
+  for (let i = startIdx + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^\s*\[[A-Za-z_"]/.test(line)) break;
+    if (assignment.test(line)) {
+      throw new Error(
+        `Found "${name}" defined inline under [mcp_servers] (e.g. \`${name} = { ... }\`), ` +
+          `which this tool doesn't support. Please move the entry into a ` +
+          `[mcp_servers.${name}] table, or use --config-path to point at a different config file.`,
+      );
+    }
+  }
+}
+
+function removeBlock(lines: string[], name: string): string[] {
+  const startIdx = lines.findIndex((line) => isTargetHeader(line, name));
   if (startIdx === -1) return lines;
 
   let endIdx = lines.length;
   for (let i = startIdx + 1; i < lines.length; i++) {
-    if (/^\s*\[/.test(lines[i])) {
+    if (/^\s*\[[A-Za-z_"]/.test(lines[i])) {
       endIdx = i;
       break;
     }

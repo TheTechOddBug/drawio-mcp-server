@@ -23,7 +23,13 @@ function isolateEnv(homeDir: string): NodeJS.ProcessEnv {
   env.HOME = homeDir;
   env.USERPROFILE = homeDir;
   env.APPDATA = join(homeDir, "AppData", "Roaming");
+  env.LOCALAPPDATA = join(homeDir, "AppData", "Local");
+  env.HOMEDRIVE = "C:"; // benign default; ignored on POSIX
+  env.HOMEPATH = homeDir;
   delete env.XDG_CONFIG_HOME;
+  delete env.XDG_DATA_HOME;
+  delete env.XDG_STATE_HOME;
+  delete env.XDG_CACHE_HOME;
   return env;
 }
 
