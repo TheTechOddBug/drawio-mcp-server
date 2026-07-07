@@ -424,3 +424,7 @@ DRAWIO_MCP_LOGGER=mcp-server drawio-mcp-server --editor
 ```
 
 > **Note (breaking change):** the previous `LOGGER_TYPE` environment variable has been removed. Use `--logger` or `DRAWIO_MCP_LOGGER` instead.
+
+## Install subcommand
+
+`drawio-mcp-server install <host>` writes and removes the MCP entry in each host's config file. Full reference in [docs/PLUGINS.md](./docs/PLUGINS.md).

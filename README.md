@@ -58,10 +58,15 @@ No additional requirements - runs out of the box with `--editor` flag.
 
 ### 1. Configure your MCP host
 
-Add the server to your MCP client configuration:
+**Fastest path:**
+
+- **Claude Code:** `/plugin marketplace add lgazo/drawio-mcp-server` then `/plugin install drawio`.
+- **Any other host:** `npx drawio-mcp-server install <host>` where `<host>` is `claude-code`, `claude-desktop`, `codex`, `zed`, `opencode`, or `all`.
+
+See [docs/PLUGINS.md](./docs/PLUGINS.md) for the full reference, flags, and uninstall.
 
 <details>
-  <summary>Claude Desktop</summary>
+  <summary>Manual install (JSON snippet, Claude Desktop example)</summary>
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
@@ -75,63 +80,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   }
 }
 ```
-</details>
 
-<details>
-  <summary>Claude Code</summary>
-
-```sh
-claude mcp add-json drawio '{"type":"stdio","command":"npx","args":["-y","drawio-mcp-server","--editor"]}'
-```
-</details>
-
-<details>
-  <summary>Zed</summary>
-
-Add to `~/.config/zed/settings.json`:
-
-```json
-{
-  "context_servers": {
-    "drawio": {
-      "command": "npx",
-      "args": ["-y", "drawio-mcp-server", "--editor"],
-      "env": {}
-    }
-  }
-}
-```
-</details>
-
-<details>
-  <summary>Codex</summary>
-
-Edit `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.drawio]
-command = "npx"
-args = ["-y", "drawio-mcp-server", "--editor"]
-```
-</details>
-
-<details>
-  <summary>OpenCode</summary>
-
-Add to `opencode.json` in your project root or `~/.config/opencode/opencode.json`:
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "mcp": {
-    "drawio": {
-      "type": "local",
-      "command": ["npx", "-y", "drawio-mcp-server", "--editor"],
-      "enabled": true
-    }
-  }
-}
-```
 </details>
 
 For other MCP clients and detailed configuration (including pnpm options), see [Configuration](./CONFIG.md).
