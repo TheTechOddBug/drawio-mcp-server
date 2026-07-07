@@ -14,18 +14,39 @@ import { spawnSync } from "node:child_process";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const BIN = join(__dirname, "..", "..", "build", "index.js");
 
-function run(args: string[]) {
-  return spawnSync("node", [BIN, "install", ...args], { encoding: "utf8" });
+// Sandbox every adapter's defaultPaths() resolution so a spawned `install`
+// process can never resolve to the real developer's home directory.
+// homedir() reads HOME on POSIX and USERPROFILE/HOMEDRIVE+HOMEPATH on
+// Windows; claude-desktop's resolver reads APPDATA directly on win32.
+function isolateEnv(homeDir: string): NodeJS.ProcessEnv {
+  const env: NodeJS.ProcessEnv = { ...process.env };
+  env.HOME = homeDir;
+  env.USERPROFILE = homeDir;
+  env.APPDATA = join(homeDir, "AppData", "Roaming");
+  delete env.XDG_CONFIG_HOME;
+  return env;
 }
 
 describe("install subcommand — end to end", () => {
   let dir: string;
+  let home: string;
+
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), "drawio-e2e-"));
+    home = mkdtempSync(join(tmpdir(), "drawio-home-"));
   });
   afterEach(() => {
     rmSync(dir, { recursive: true, force: true });
+    rmSync(home, { recursive: true, force: true });
   });
+
+  function run(args: string[]) {
+    return spawnSync("node", [BIN, "install", ...args], {
+      encoding: "utf8",
+      env: isolateEnv(home),
+      cwd: home,
+    });
+  }
 
   it("codex --print emits TOML on stdout, no file written", () => {
     const target = join(dir, "codex.toml");
@@ -64,7 +85,7 @@ describe("install subcommand — end to end", () => {
     expect(second.stderr).toContain("Re-run with --yes");
   });
 
-  it("all with per-host config paths writes to each", () => {
+  it("all with per-host config paths writes to each, and never touches unoverridden adapters' real paths", () => {
     const codexPath = join(dir, "codex.toml");
     const zedPath = join(dir, "zed.json");
     const r = run([
@@ -78,6 +99,19 @@ describe("install subcommand — end to end", () => {
     expect(r.status).toBe(0);
     expect(existsSync(codexPath)).toBe(true);
     expect(existsSync(zedPath)).toBe(true);
+
+    // opencode, claude-desktop, and claude-code got no --config-path
+    // override. With HOME sandboxed to a fresh temp dir, their
+    // defaultPaths() resolve to non-existent files, so detect() reports
+    // "absent" and applyAll() skips them entirely — proving isolation
+    // rather than just asserting the explicit overrides worked.
+    expect(existsSync(join(home, ".claude.json"))).toBe(false);
+    expect(
+      existsSync(join(home, ".config", "Claude", "claude_desktop_config.json")),
+    ).toBe(false);
+    expect(existsSync(join(home, ".config", "opencode", "opencode.json"))).toBe(
+      false,
+    );
   });
 
   it("returns exit 1 on unknown host", () => {
