@@ -64,6 +64,17 @@ import { handleCompatReport } from "./drawio-compat/log-report.js";
 
 const fatalLog = create_console_logger();
 
+if (process.argv[2] === "install") {
+  const { runInstall } = await import("./install/index.js");
+  try {
+    const code = await runInstall(process.argv.slice(3));
+    process.exit(code);
+  } catch (err) {
+    fatalLog.log("error", err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  }
+}
+
 export type AppLogger = {
   log: (level: string, message?: any, ...data: any[]) => void;
   debug: (message?: any, ...data: any[]) => void;
