@@ -1,10 +1,12 @@
 import type { HostAdapter } from "../types.js";
 import { codexAdapter } from "./codex.js";
+import { opencodeAdapter } from "./opencode.js";
 import { zedAdapter } from "./zed.js";
 
 export const HOST_ADAPTERS: Record<string, HostAdapter> = {
   [codexAdapter.id]: codexAdapter,
   [zedAdapter.id]: zedAdapter,
+  [opencodeAdapter.id]: opencodeAdapter,
 };
 
 export function listHostIds(): string[] {
