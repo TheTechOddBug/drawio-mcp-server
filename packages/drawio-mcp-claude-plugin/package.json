@@ -13,6 +13,7 @@
 		"@biomejs/biome": "catalog:",
 		"@jest/globals": "30.2.0",
 		"@types/jest": "30.0.0",
+		"@types/node": "25.0.3",
 		"ajv": "8.17.1",
 		"gray-matter": "4.0.3",
 		"jest": "30.2.0",
