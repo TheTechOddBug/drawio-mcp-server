@@ -32,11 +32,35 @@ function blockBody(entry: McpEntry): string {
     command: entry.command,
     args: entry.args,
   };
-  if (Object.keys(entry.env).length > 0) table.env = entry.env;
   // `smol-toml` renders arrays/inline-tables with padding spaces
   // (`[ "a", "b" ]`); normalize to the compact style used elsewhere in this
   // project's generated configs (`["a", "b"]`).
-  return stringify(table).trim().replace(/\[ /g, "[").replace(/ \]/g, "]");
+  const base = stringify(table)
+    .trim()
+    .replace(/\[ /g, "[")
+    .replace(/ \]/g, "]");
+  const envKeys = Object.keys(entry.env);
+  if (envKeys.length === 0) return base;
+  // `smol-toml`'s `stringify` renders a nested object as a `[env]` sub-table
+  // header on its own line, which `removeBlock` (below) mistakes for a
+  // sibling top-level table -- corrupting idempotent merges and leaking
+  // secrets on uninstall (the header + its keys survive as an orphan
+  // block). Render `env` as a single-line inline table instead, which stays
+  // inside this block and cannot be mistaken for a new `[table]` header.
+  const envLine = `env = { ${envKeys
+    .map((k) => `${tomlKey(k)} = ${tomlString(entry.env[k])}`)
+    .join(", ")} }`;
+  return `${base}\n${envLine}`;
+}
+
+const BARE_KEY = /^[A-Za-z0-9_-]+$/;
+
+function tomlKey(key: string): string {
+  return BARE_KEY.test(key) ? key : tomlString(key);
+}
+
+function tomlString(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
 /**

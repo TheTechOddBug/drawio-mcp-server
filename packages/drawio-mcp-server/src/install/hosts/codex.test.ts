@@ -60,6 +60,34 @@ describe("codexAdapter.merge", () => {
     expect(out).toContain("[mcp_servers.other]");
     expect(out).not.toContain("[mcp_servers.drawio]");
   });
+
+  it("round-trips non-empty env idempotently and removes env on uninstall", () => {
+    const withEnv = {
+      command: "npx",
+      args: ["-y", "drawio-mcp-server", "--editor"],
+      env: { FOO: "bar", HELLO: "world" },
+      transport: "stdio" as const,
+    };
+    const first = codexAdapter.merge("", withEnv, "drawio", {
+      uninstall: false,
+    });
+    expect(first).toContain("[mcp_servers.drawio]");
+    expect(first).toContain("env = {");
+    expect(first).toContain('FOO = "bar"');
+    expect(first).toContain('HELLO = "world"');
+    const second = codexAdapter.merge(first, withEnv, "drawio", {
+      uninstall: false,
+    });
+    expect(second).toBe(first);
+    const removed = codexAdapter.merge(first, withEnv, "drawio", {
+      uninstall: true,
+    });
+    expect(removed).not.toContain("[mcp_servers.drawio]");
+    expect(removed).not.toContain("FOO");
+    expect(removed).not.toContain("HELLO");
+    expect(removed).not.toContain("[env]");
+    expect(removed).not.toContain("bar");
+  });
 });
 
 describe("codexAdapter.defaultPaths", () => {
