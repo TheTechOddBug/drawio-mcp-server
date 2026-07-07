@@ -30,6 +30,7 @@ export interface InstallOptions {
   extraArgs: string[];
   env: Record<string, string>;
   configPath?: string;
+  configPathByHost: Record<string, string>;
   print: boolean;
   dryRun: boolean;
   uninstall: boolean;

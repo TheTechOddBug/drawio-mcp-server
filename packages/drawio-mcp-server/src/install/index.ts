@@ -34,6 +34,7 @@ export function parseArgs(argv: string[]): InstallOptions {
     extraArgs: [],
     env: {},
     configPath: undefined,
+    configPathByHost: {},
     print: false,
     dryRun: false,
     uninstall: false,
@@ -67,9 +68,16 @@ export function parseArgs(argv: string[]): InstallOptions {
         opts.env[kv.slice(0, eq)] = kv.slice(eq + 1);
         break;
       }
-      case "--config-path":
-        opts.configPath = argv[++i];
+      case "--config-path": {
+        const raw = argv[++i];
+        const eq = raw.indexOf("=");
+        if (eq > 0) {
+          opts.configPathByHost[raw.slice(0, eq)] = raw.slice(eq + 1);
+        } else {
+          opts.configPath = raw;
+        }
         break;
+      }
       case "--print":
         opts.print = true;
         break;
@@ -109,8 +117,7 @@ export async function runInstall(argv: string[]): Promise<number> {
     return 1;
   }
   if (opts.host === "all") {
-    process.stderr.write("`install all` will be wired in a later task\n");
-    return 1;
+    return applyAll(opts);
   }
   const adapter = HOST_ADAPTERS[opts.host];
   if (!adapter) {
@@ -118,6 +125,26 @@ export async function runInstall(argv: string[]): Promise<number> {
     return 1;
   }
   return applySingle(adapter, opts);
+}
+
+async function applyAll(opts: InstallOptions): Promise<number> {
+  let exitCode = 0;
+  for (const [id, adapter] of Object.entries(HOST_ADAPTERS)) {
+    const detect = await adapter.detect();
+    const explicit = opts.configPathByHost[id];
+    if (detect === "absent" && !explicit) {
+      process.stderr.write(`skip ${id}: not installed\n`);
+      continue;
+    }
+    const perHostOpts: InstallOptions = {
+      ...opts,
+      host: id,
+      configPath: explicit ?? opts.configPath,
+    };
+    const code = await applySingle(adapter, perHostOpts);
+    if (code !== 0) exitCode = code;
+  }
+  return exitCode;
 }
 
 async function applySingle(
