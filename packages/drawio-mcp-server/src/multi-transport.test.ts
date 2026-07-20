@@ -182,6 +182,9 @@ describe("HTTP transport (stateless per-request)", () => {
 
     const tools = await client.listTools();
     expect(tools.tools.length).toBeGreaterThan(0);
+    expect(tools.tools.map((tool) => tool.name)).toEqual(
+      expect.arrayContaining(["set-document-title", "save-document"]),
+    );
 
     await client.close();
   });

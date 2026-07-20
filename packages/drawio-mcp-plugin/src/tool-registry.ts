@@ -33,6 +33,8 @@ import {
   type DrawioCellOptions,
 } from "./drawio-tools.js";
 import { import_mermaid } from "./tools/import-mermaid/index.js";
+import { save_document } from "./tools/save-document/index.js";
+import { set_document_title } from "./tools/set-document-title/index.js";
 
 export type ToolDefinition = {
   name: string;
@@ -394,6 +396,16 @@ const rawToolDefinitions: ToolDefinition[] = [
     name: "rename-page",
     params: new Set(["page", "name"]),
     handler: rename_page,
+  },
+  {
+    name: "set-document-title",
+    params: new Set(["title"]),
+    handler: set_document_title,
+  },
+  {
+    name: "save-document",
+    params: new Set<string>([]),
+    handler: save_document,
   },
 ];
 

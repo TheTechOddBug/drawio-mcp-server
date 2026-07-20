@@ -36,6 +36,8 @@ describe("shared tool registry", () => {
         "create-page",
         "copy-page",
         "rename-page",
+        "set-document-title",
+        "save-document",
         "import-mermaid",
       ]),
     );
@@ -71,6 +73,13 @@ describe("shared tool registry", () => {
     expect(registry.get("rename-page")?.params.has("target_document")).toBe(
       true,
     );
+    expect(registry.get("set-document-title")?.params.has("title")).toBe(true);
+    expect(
+      registry.get("set-document-title")?.params.has("target_document"),
+    ).toBe(true);
+    expect(registry.get("save-document")?.params.has("target_document")).toBe(
+      true,
+    );
     expect(registry.get("copy-page")?.params.has("page")).toBe(true);
     expect(registry.get("copy-page")?.params.has("target_document")).toBe(true);
     expect(registry.get("import-mermaid")?.params.has("target_page")).toBe(
@@ -85,6 +94,88 @@ describe("shared tool registry", () => {
     expect(
       registry.get("get-shape-by-name")?.params.has("target_document"),
     ).toBe(true);
+  });
+
+  it("renames the current document while preserving its file extension", async () => {
+    await activateDocument();
+    const toolDefinitions = await loadToolDefinitions();
+    const registry = new Map(
+      toolDefinitions.map(
+        (definition) => [definition.name, definition] as const,
+      ),
+    );
+    const handler = registry.get("set-document-title")?.handler;
+    expect(handler).toBeDefined();
+
+    let title = "Untitled Diagram.drawio";
+    const rename = jest.fn(
+      (
+        nextTitle: string,
+        success: () => void,
+        _error: (error: unknown) => void,
+      ) => {
+        title = nextTitle;
+        success();
+      },
+    );
+    const ui = {
+      getCurrentFile: jest.fn(() => ({
+        getTitle: () => title,
+        rename,
+      })),
+    };
+
+    await expect(
+      handler?.(ui, {
+        target_document: { id: "doc-1" },
+        title: "Architecture",
+      }),
+    ).resolves.toEqual({
+      previous_title: "Untitled Diagram.drawio",
+      title: "Architecture.drawio",
+    });
+    expect(rename).toHaveBeenCalledWith(
+      "Architecture.drawio",
+      expect.any(Function),
+      expect.any(Function),
+    );
+  });
+
+  it("triggers the editor's existing save action", async () => {
+    await activateDocument();
+    const toolDefinitions = await loadToolDefinitions();
+    const registry = new Map(
+      toolDefinitions.map(
+        (definition) => [definition.name, definition] as const,
+      ),
+    );
+    const handler = registry.get("save-document")?.handler;
+    expect(handler).toBeDefined();
+
+    const save = jest.fn();
+    const ui = {
+      actions: {
+        get: jest.fn((name: string) =>
+          name === "save" ? { funct: save } : null,
+        ),
+      },
+      getCurrentFile: jest.fn(() => ({
+        getTitle: () => "Architecture.drawio",
+        getMode: () => "device",
+      })),
+    };
+
+    expect(
+      handler?.(ui, {
+        target_document: { id: "doc-1" },
+      }),
+    ).toEqual({
+      triggered: true,
+      title: "Architecture.drawio",
+      mode: "device",
+    });
+    expect(ui.actions.get).toHaveBeenCalledWith("save");
+    expect(save).toHaveBeenCalledTimes(1);
   });
 
   it("classifies background-safe and UI-bound page tools in the shared registry", async () => {
