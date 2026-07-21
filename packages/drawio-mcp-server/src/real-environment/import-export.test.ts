@@ -187,6 +187,56 @@ describe("real environment/import export", () => {
     expect(pageState.graphModelNodeIsNull).toBe(true);
     expect(pageState.pageRootHasImportedCell).toBe(true);
 
+    // The page-root identity asserted above is a proxy for correctness. What a
+    // user actually loses when currentPage goes stale is the *serialized* file:
+    // drawio serializes through the Page abstraction, so a stale page root ends
+    // up in the saved bytes while the live graph (holding the import) does not.
+    // Assert the import survives serialization, not just the in-memory model.
+    const serializedFileData = await context.page.evaluate(() => {
+      const maybeWindow = window as any;
+      const ui = maybeWindow.ui;
+
+      try {
+        if (
+          typeof ui?.getXmlFileData === "function" &&
+          typeof maybeWindow.mxUtils?.getXml === "function"
+        ) {
+          return String(
+            maybeWindow.mxUtils.getXml(ui.getXmlFileData(true, false, true)),
+          );
+        }
+      } catch {
+        /* fall through to getFileData */
+      }
+
+      try {
+        if (typeof ui?.getFileData === "function") {
+          return String(
+            ui.getFileData(
+              true,
+              null,
+              null,
+              null,
+              true,
+              null,
+              null,
+              null,
+              null,
+              true,
+            ),
+          );
+        }
+      } catch {
+        /* unsupported build */
+      }
+
+      return null;
+    });
+
+    if (serializedFileData !== null) {
+      expect(serializedFileData).toContain("Regression cell");
+    }
+
     const survivesPageRoundTrip = await context.page.evaluate(async () => {
       const maybeWindow = window as any;
       const ui = maybeWindow.ui;
