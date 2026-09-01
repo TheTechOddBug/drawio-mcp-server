@@ -31,10 +31,10 @@ The monorepo root (`drawio-mcp`, `2.1.0`) is `private: true` and never published
 
 1. **Cut a branch is not required**; releases are cut from `main`.
 2. **Bump versions** per the coupling rules above. Update the extension's `package.json` version if the extension changed (its zips are named `drawio-mcp-extension-<version>-*.zip` by CI).
-3. **Update `docs/releases/`** — add `docs/releases/vX.Y.Z.md` covering the changes since the previous tag. Keep the file's claims in sync with the actual `git log vX.Y-1..main` diff.
-4. **Commit** the version bumps + release notes.
+3. **Update the README "Key Highlights"** — new user-facing features get a short bullet with a `![vX.Y.0](https://img.shields.io/badge/vX.Y.0-blue)` version badge. That section is the release notes; no separate release-notes file is kept.
+4. **Commit** the version bumps + README highlights.
 5. **Tag and push**: `git tag vX.Y.Z && git push origin main vX.Y.Z`.
-6. **Create the GitHub Release** for tag `vX.Y.Z` with the contents of `docs/releases/vX.Y.Z.md` as the body.
+6. **Create the GitHub Release** for tag `vX.Y.Z`, summarizing the highlights from the README section.
 
 ### What CI publishes when
 

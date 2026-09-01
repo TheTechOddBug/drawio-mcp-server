@@ -9,6 +9,8 @@ Let's do some Vibe Diagramming with the most wide-spread diagramming tool called
 
 ## Key Highlights
 
+- Claude Code plugin: `/plugin marketplace add lgazo/drawio-mcp-server` then `/plugin install drawio`, with `/drawio-open` and `/drawio-status` slash commands ![v2.3.0](https://img.shields.io/badge/v2.3.0-blue)
+- `npx drawio-mcp-server install <host>` writes the MCP config for `claude-code`, `claude-desktop`, `codex`, `zed`, `opencode`, or `all` ![v2.3.0](https://img.shields.io/badge/v2.3.0-blue)
 - Enable Draw.io MCP in IFrames ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - AWS, GCP, Azure, Cisco19, and CiscoSafe stencils auto-discovered at runtime from drawio's sidebar ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Multi-document targeting with `list-documents` and `target_document` selectors for multi-tab workflows ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
@@ -64,7 +66,7 @@ No additional requirements - runs out of the box with `--editor` flag.
 - **Claude Code:** `/plugin marketplace add lgazo/drawio-mcp-server` then `/plugin install drawio`.
 - **Any other host:** `npx drawio-mcp-server install <host>` where `<host>` is `claude-code`, `claude-desktop`, `codex`, `zed`, `opencode`, or `all`.
 
-See [docs/PLUGINS.md](./docs/PLUGINS.md) for the full reference, flags, and uninstall.
+See [docs/PLUGINS.md](./docs/PLUGINS.md) for the full reference, flags, and uninstall, and [docs/release.md](./docs/release.md) for how releases are cut.
 
 <details>
   <summary>Manual install (JSON snippet, Claude Desktop example)</summary>
