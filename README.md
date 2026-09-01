@@ -15,6 +15,7 @@ Let's do some Vibe Diagramming with the most wide-spread diagramming tool called
 - Multi-page targeting with required `target_page` selectors for page-scoped tools ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Per-document FIFO serialization for live operations, so multiple agents can work on different files safely ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Page management tools: `list-pages`, `get-current-page`, `create-page`, `copy-page`, `rename-page` ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
+- Document persistence tools: `set-document-title` and `save-document`
 - Import, embed, or expand [Mermaid](https://mermaid.js.org/) diagrams ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Firefox support is back, TLS mode is necessary ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Server supports TLS mode and optionally generates self-signed certificates ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
@@ -172,11 +173,11 @@ See [DESKTOP.md](./DESKTOP.md) for the full setup steps and the current limitati
 
 ## Star History
 
-<a href="https://star-history.com/#lgazo/drawio-mcp-server&Date">
+<a href="https://star-history.dera.page/#lgazo/drawio-mcp-server&type=Date">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=lgazo/drawio-mcp-server&type=Date&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=lgazo/drawio-mcp-server&type=Date" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=lgazo/drawio-mcp-server&type=Date" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=lgazo/drawio-mcp-server&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=lgazo/drawio-mcp-server&type=Date" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=lgazo/drawio-mcp-server&type=Date" />
  </picture>
 </a>
 
