@@ -367,6 +367,25 @@ async function startHttpServer(
       : {}),
   });
 
+  // `serve()` calls `listen()` synchronously; wait for the outcome so a failed
+  // bind surfaces as a clean, fatal error instead of an unhandled 'error'
+  // event (or, worse, silence).
+  await new Promise<void>((resolve, reject) => {
+    httpServer.once("error", (error) => {
+      reject(
+        new Error(
+          `Failed to bind HTTP server on port ${httpPort}: ${error instanceof Error ? error.message : String(error)}`,
+          { cause: error },
+        ),
+      );
+    });
+    if (httpServer.listening) {
+      resolve();
+    } else {
+      httpServer.once("listening", () => resolve());
+    }
+  });
+
   const listeningPort =
     httpPort === 0
       ? ((httpServer.address() as AddressInfo | null)?.port ?? httpPort)
@@ -1204,7 +1223,26 @@ async function main() {
       void shutdown("stdin-close");
     });
   }
-  await app.startHttpServer(config.httpPort, config, features);
+  // Only open the HTTP listener when something will actually be served on
+  // it. A stdio-only run previously bound port 3000 unconditionally,
+  // colliding with common dev servers while serving nothing useful
+  // (see upstream issue #66).
+  if (features.enableMcp || features.enableEditor) {
+    await app.startHttpServer(config.httpPort, config, features);
+  } else {
+    app.log.debug(
+      "HTTP server not started: no HTTP surface enabled (stdio-only run). Use --transport http or --editor to serve HTTP.",
+    );
+    const httpPortExplicit =
+      cliArgs.includes("--http-port") ||
+      Boolean(process.env.DRAWIO_MCP_HTTP_PORT?.length);
+    if (httpPortExplicit) {
+      app.log.log(
+        "warning",
+        `--http-port was set but no HTTP surface is enabled; port ${config.httpPort} stays free. Use --transport http or --editor to serve HTTP.`,
+      );
+    }
+  }
 
   app.log.debug(`Draw.io MCP Server running on ${config.transports}`);
 }

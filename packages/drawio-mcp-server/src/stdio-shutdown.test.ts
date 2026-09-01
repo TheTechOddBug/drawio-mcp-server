@@ -173,6 +173,42 @@ describe("graceful shutdown releases WebSocket port", () => {
     expect(free).toBe(true);
   }, 20000);
 
+  it("keeps the HTTP port free in stdio-only mode", async () => {
+    const extensionPort = await getFreePort();
+    const httpPort = await getFreePort();
+
+    proc = spawnServer(extensionPort, httpPort);
+    const portTaken = await waitForPortHeld(extensionPort, HOST, 5000);
+    expect(portTaken).toBe(true);
+
+    // Give any (wrongly) eager HTTP listener time to bind before asserting.
+    await new Promise((r) => setTimeout(r, 1000));
+
+    expect(await isPortFree(httpPort, HOST)).toBe(true);
+  }, 20000);
+
+  it("exits fatally when the HTTP port cannot be bound in http transport", async () => {
+    const extensionPort = await getFreePort();
+
+    // Occupy the HTTP port so the server's bind attempt fails.
+    const blocker = createServer();
+    await new Promise<void>((resolve) => {
+      blocker.listen({ port: 0, host: HOST }, () => resolve());
+    });
+    const takenPort = (blocker.address() as { port: number }).port;
+
+    proc = spawnServer(extensionPort, takenPort, "http");
+    let stderr = "";
+    proc.stderr.on("data", (chunk: Buffer) => {
+      stderr += chunk.toString();
+    });
+    const exitCode = await waitForExit(proc, 10000);
+    expect(exitCode).toBe(1);
+    expect(stderr).toContain("Failed to bind HTTP server");
+
+    blocker.close();
+  }, 20000);
+
   it("releases extension port when stdio host closes stdin pipe", async () => {
     const extensionPort = await getFreePort();
     const httpPort = await getFreePort();
