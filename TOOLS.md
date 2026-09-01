@@ -51,6 +51,23 @@ Lists all currently connected Draw.io document instances.
 
 *Returns*: Array of document objects with `id`, `title`, `mode`, `hash`, `file_url`, `page_count`, and `current_page`
 
+### `set-document-title`
+
+Renames the selected Draw.io document through its active storage provider. When the new title omits an extension, the current `.drawio`, `.drawio.svg`, `.drawio.png`, `.xml`, `.svg`, or `.png` suffix is preserved.
+
+*Parameters*:
+- `title`: New document title, with or without the existing extension
+
+*Returns*: The previous and resulting document titles
+
+### `save-document`
+
+Triggers Draw.io's existing **File → Save** action for the selected document, preserving the editor's current storage mode.
+
+The call confirms that the save flow was triggered. Authentication, conflict, permission, or **Save As** prompts may still require user interaction in the Draw.io tab.
+
+*Returns*: Trigger status plus the current document title and storage mode
+
 ## Diagram Inspection Tools
 
 ### `get-selected-cell`

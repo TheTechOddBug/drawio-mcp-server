@@ -23,10 +23,12 @@ import { registerListPagesTool } from "./list-pages.js";
 import { registerListPagedModelTool } from "./list-paged-model.js";
 import { registerMoveCellToLayerTool } from "./move-cell-to-layer.js";
 import { registerRenamePageTool } from "./rename-page.js";
+import { registerSaveDocumentTool } from "./save-document.js";
 import { registerSetActiveLayerTool } from "./set-active-layer.js";
 import { registerSetCellDataTool } from "./set-cell-data.js";
 import { registerSetCellParentTool } from "./set-cell-parent.js";
 import { registerSetCellShapeTool } from "./set-cell-shape.js";
+import { registerSetDocumentTitleTool } from "./set-document-title.js";
 
 const registrars: ToolRegistrar[] = [
   registerGetSelectedCellTool,
@@ -57,6 +59,8 @@ const registrars: ToolRegistrar[] = [
   registerCreatePageTool,
   registerCopyPageTool,
   registerRenamePageTool,
+  registerSetDocumentTitleTool,
+  registerSaveDocumentTool,
 ];
 
 export function registerTools(...args: Parameters<ToolRegistrar>) {
