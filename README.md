@@ -11,13 +11,14 @@ Let's do some Vibe Diagramming with the most wide-spread diagramming tool called
 
 - Claude Code plugin: `/plugin marketplace add lgazo/drawio-mcp-server` then `/plugin install drawio`, with `/drawio-open` and `/drawio-status` slash commands ![v2.3.0](https://img.shields.io/badge/v2.3.0-blue)
 - `npx drawio-mcp-server install <host>` writes the MCP config for `claude-code`, `claude-desktop`, `codex`, `zed`, `opencode`, or `all` ![v2.3.0](https://img.shields.io/badge/v2.3.0-blue)
-- Enable Draw.io MCP in IFrames ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
-- AWS, GCP, Azure, Cisco19, and CiscoSafe stencils auto-discovered at runtime from drawio's sidebar ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
-- Multi-document targeting with `list-documents` and `target_document` selectors for multi-tab workflows ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
-- Multi-page targeting with required `target_page` selectors for page-scoped tools ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
-- Per-document FIFO serialization for live operations, so multiple agents can work on different files safely ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
-- Page management tools: `list-pages`, `get-current-page`, `create-page`, `copy-page`, `rename-page` ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
-- Document persistence tools: `set-document-title` and `save-document`
+- Document persistence tools: `set-document-title` and `save-document` ![v2.3.0](https://img.shields.io/badge/v2.3.0-blue)
+- Draw.io library API version compatibility mechanism ![v2.2.0](https://img.shields.io/badge/v2.2.0-blue)
+- Enable Draw.io MCP in IFrames
+- AWS, GCP, Azure, Cisco19, and CiscoSafe stencils auto-discovered at runtime from drawio's sidebar
+- Multi-document targeting with `list-documents` and `target_document` selectors for multi-tab workflows
+- Multi-page targeting with required `target_page` selectors for page-scoped tools
+- Per-document FIFO serialization for live operations, so multiple agents can work on different files safely
+- Page management tools: `list-pages`, `get-current-page`, `create-page`, `copy-page`, `rename-page`
 - Import, embed, or expand [Mermaid](https://mermaid.js.org/) diagrams ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Firefox support is back, TLS mode is necessary ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
 - Server supports TLS mode and optionally generates self-signed certificates ![v2.1.0](https://img.shields.io/badge/v2.1.0-blue)
